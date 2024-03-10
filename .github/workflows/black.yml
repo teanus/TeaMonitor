@@ -1,0 +1,41 @@
+name: Black
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  format:
+    name: Format code with Black
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+
+      - name: Install Black
+        run: pip install black
+
+      - name: Run Black
+        run: black .
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code || echo "Форматирование успешно выполнено"
+          echo echo "changes=$(if [ $? -eq 0 ]; then echo "false"; else echo "true"; fi)" >> $GITHUB_ENV
+
+
+      - name: Commit changes
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          git config --local user.email "teanus.ti@gmail.com"
+          git config --local user.name "teanus"
+          git commit -am "Автоматическое форматирование кода с помощью Black"
+          git push
